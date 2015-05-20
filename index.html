@@ -1,1 +1,239 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Practical-machine-learning by Dripdrop12</title>
 
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Practical-machine-learning</h1>
+        <p>This repository contains files submitted in completion of the Practical Machine Learning course, which is one of nine courses from the data science specialization offered by Johns Hopkins University&#39;s Department of Biostatistics on coursera.org</p>
+
+        <p class="view"><a href="https://github.com/Dripdrop12/Practical-Machine-Learning">View the Project on GitHub <small>Dripdrop12/Practical-Machine-Learning</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/Dripdrop12/Practical-Machine-Learning/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/Dripdrop12/Practical-Machine-Learning/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/Dripdrop12/Practical-Machine-Learning">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="human-activities-recognition-using-random-forests" class="anchor" href="#human-activities-recognition-using-random-forests" aria-hidden="true"><span class="octicon octicon-link"></span></a>Human Activities Recognition Using Random Forests</h1>
+
+<p>author: Jonathan Hill
+date: <code>r date()</code>
+transition: rotate
+transition-speed: slow</p>
+
+<h1>
+<a id="original-authors-" class="anchor" href="#original-authors-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Original Authors </h1>
+
+<p>This dataset is licensed under the Creative Commons license (CC BY-SA).</p>
+
+<p>Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13). Stuttgart, Germany: ACM SIGCHI, 2013.</p>
+
+<p>Read more: <a href="http://groupware.les.inf.puc-rio.br/har#ixzz3abHmT200">http://groupware.les.inf.puc-rio.br/har#ixzz3abHmT200</a></p>
+
+<h1>
+<a id="goal" class="anchor" href="#goal" aria-hidden="true"><span class="octicon octicon-link"></span></a>Goal</h1>
+
+<ul>
+<li>Using raw data from devices such as Jawbone Up, Nike FuelBand, and Fitbit </li>
+<li>Predict when someone is performing bicep curls with poor form and classify what they are doing wrong (classes B, C, D, and E)</li>
+</ul>
+
+<h1>
+<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction</h1>
+
+<p>Six young health participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions:</p>
+
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>exactly according to the specification</td>
+</tr>
+<tr>
+<td>B</td>
+<td>throwing the elbows to the front</td>
+</tr>
+<tr>
+<td>C</td>
+<td>lifting the dumbbell only halfway</td>
+</tr>
+<tr>
+<td>D</td>
+<td>lowering the dumbbell only halfway</td>
+</tr>
+<tr>
+<td>E</td>
+<td>throwing the hips to the front</td>
+</tr>
+</tbody>
+</table>
+
+<h1>
+<a id="sensor-locations" class="anchor" href="#sensor-locations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sensor Locations</h1>
+
+<p><img src="http://groupware.les.inf.puc-rio.br/static/WLE/on-body-sensing-schema.png" alt="Sensor Image"></p>
+
+<h1>
+<a id="downloading-the-data" class="anchor" href="#downloading-the-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Downloading the Data</h1>
+
+<pre lang="r,eval=FALSE"><code># The training data #
+url &lt;- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+download.file(url = url, destfile = "pml-training.csv")
+
+# The testing data #
+url2 &lt;- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+download.file(url = url2, destfile = "pml-testing.csv")
+</code></pre>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">finaltesting</span> <span class="pl-k">&lt;-</span> read.csv(<span class="pl-s"><span class="pl-pds">"</span>pml-testing.csv<span class="pl-pds">"</span></span>)
+<span class="pl-smi">training</span> <span class="pl-k">&lt;-</span> read.csv(<span class="pl-s"><span class="pl-pds">"</span>pml-training.csv<span class="pl-pds">"</span></span>)</pre></div>
+
+<h1>
+<a id="required-r-packages" class="anchor" href="#required-r-packages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Required R Packages</h1>
+
+<div class="highlight highlight-r"><pre>library(<span class="pl-smi">caret</span>)
+library(<span class="pl-smi">randomForest</span>)</pre></div>
+
+<h1>
+<a id="partitions-for-cross-validation" class="anchor" href="#partitions-for-cross-validation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Partitions for Cross Validation</h1>
+
+<p>In order to train the model, I created a partition with 60% of the data called "tr." </p>
+
+<p>With the remaining 40%, I created a partition with 20% to test the model ("te") and another with the remaining 20% to validate the model ("validation").</p>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">inTrain</span> <span class="pl-k">&lt;-</span> createDataPartition(<span class="pl-smi">training</span><span class="pl-k">$</span><span class="pl-smi">classe</span>, <span class="pl-v">p</span> <span class="pl-k">=</span> <span class="pl-c1">0.6</span>, <span class="pl-v">list</span> <span class="pl-k">=</span> <span class="pl-c1">FALSE</span>)
+<span class="pl-smi">tr</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">training</span>[<span class="pl-smi">inTrain</span>, ]
+<span class="pl-smi">te</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">training</span>[<span class="pl-k">-</span><span class="pl-smi">inTrain</span>, ]</pre></div>
+
+<h1>
+<a id="pre-processing" class="anchor" href="#pre-processing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Pre-processing</h1>
+
+<div class="highlight highlight-r"><pre><span class="pl-c"># Remove near zero variance predictors #</span>
+<span class="pl-smi">nzv</span> <span class="pl-k">&lt;-</span> nearZeroVar(<span class="pl-smi">tr</span>, <span class="pl-v">saveMetrics</span> <span class="pl-k">=</span> <span class="pl-c1">TRUE</span>)
+<span class="pl-smi">nearzerofilter</span> <span class="pl-k">&lt;-</span> rownames(<span class="pl-smi">nzv</span>[<span class="pl-smi">nzv</span><span class="pl-k">$</span><span class="pl-smi">nzv</span> <span class="pl-k">==</span> <span class="pl-c1">FALSE</span>, ])
+<span class="pl-smi">tr</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">tr</span>[, <span class="pl-smi">nearzerofilter</span>]
+
+<span class="pl-c"># ... correlated predictors using a .85 cutoff #</span>
+<span class="pl-smi">tr</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">tr</span>[, <span class="pl-c1">6</span><span class="pl-k">:</span>ncol(<span class="pl-smi">tr</span>)]
+<span class="pl-smi">trainCor</span> <span class="pl-k">&lt;-</span> cor(<span class="pl-smi">tr</span>[,<span class="pl-c1">1</span><span class="pl-k">:</span>(ncol(<span class="pl-smi">tr</span>)<span class="pl-k">-</span><span class="pl-c1">1</span>)], <span class="pl-v">use</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>complete.obs<span class="pl-pds">"</span></span>)
+<span class="pl-smi">corFilter</span> <span class="pl-k">&lt;-</span> findCorrelation(<span class="pl-smi">trainCor</span>, <span class="pl-v">cutoff</span> <span class="pl-k">=</span> .<span class="pl-c1">85</span>)
+<span class="pl-smi">tr</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">tr</span>[, <span class="pl-k">-</span><span class="pl-smi">corFilter</span>]
+
+<span class="pl-c"># ... and variables with greater than 85% NA</span>
+<span class="pl-smi">tr</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">tr</span>[, colMeans(is.na(<span class="pl-smi">tr</span>)) <span class="pl-k">&lt;</span><span class="pl-k">=</span> .<span class="pl-c1">85</span>]</pre></div>
+
+<h1>
+<a id="model-selection" class="anchor" href="#model-selection" aria-hidden="true"><span class="octicon octicon-link"></span></a>Model Selection</h1>
+
+<p>Because the decision points of the model do not need to be interpreted and the continuous variables in the data are not very interpretable, random forests is a good option for this problem.</p>
+
+<p>Centering and scaling continuous variables prevents large values from biasing the model.</p>
+
+<p>There was very little difference in accuracy among models using 3, 5 and 10-fold cross-validated resampling, but processing time was much longer for the model using 10-fold cross-validated resampling.  Therefore, the final model uses 5-fold cross-validated resampling.</p>
+
+<h1>
+<a id="model" class="anchor" href="#model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Model</h1>
+
+<div class="highlight highlight-r"><pre><span class="pl-c"># Random forests #</span>
+<span class="pl-smi">modelFit</span> <span class="pl-k">&lt;-</span> train(<span class="pl-smi">classe</span> <span class="pl-k">~</span>.,
+                  <span class="pl-v">data</span> <span class="pl-k">=</span> <span class="pl-smi">tr</span>,
+                  <span class="pl-v">method</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>rf<span class="pl-pds">"</span></span>,
+                  <span class="pl-v">trControl</span> <span class="pl-k">=</span> trainControl(<span class="pl-v">method</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>cv<span class="pl-pds">"</span></span>, <span class="pl-v">number</span> <span class="pl-k">=</span> <span class="pl-c1">5</span>),
+                  <span class="pl-v">preProcess</span> <span class="pl-k">=</span> c(<span class="pl-s"><span class="pl-pds">"</span>center<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>scale<span class="pl-pds">"</span></span>)
+                  )</pre></div>
+
+<h1>
+<a id="model-cont" class="anchor" href="#model-cont" aria-hidden="true"><span class="octicon octicon-link"></span></a>Model (cont.)</h1>
+
+<pre><code>`r modelFit$modelInfo$label`
+
+`r paste(dim(tr)[1], "samples",collapse = " ")`
+`r paste(dim(tr)[2], "predictors",collapse = " ")`
+`r paste(length(levels(modelFit$finalModel$predicted)), "classes:", paste(levels(modelFit$finalModel$predicted),collapse = ", "), collapse = " ")`
+
+`r paste("Pre-processing:",paste(modelFit$preProcess$method, collapse = ", "),collapse = " ")`
+`r paste("Resampling: Cross-Validated (", modelFit$preProcess$k, "fold)", collapse = " ")`
+</code></pre>
+
+<pre lang="r,echo=FALSE"><code>as.data.frame(modelFit$results[,1:4])
+</code></pre>
+
+<h1>
+<a id="test-and-validation-partitions" class="anchor" href="#test-and-validation-partitions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Test and Validation Partitions</h1>
+
+<div class="highlight highlight-r"><pre><span class="pl-c"># 20% each #</span>
+<span class="pl-smi">inValidation</span> <span class="pl-k">&lt;-</span> createDataPartition(<span class="pl-smi">te</span><span class="pl-k">$</span><span class="pl-smi">classe</span>, <span class="pl-v">p</span> <span class="pl-k">=</span> .<span class="pl-c1">5</span>, <span class="pl-v">list</span> <span class="pl-k">=</span> <span class="pl-c1">FALSE</span>)
+<span class="pl-smi">validation</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">te</span>[<span class="pl-smi">inValidation</span>, names(<span class="pl-smi">te</span>) <span class="pl-k">%in%</span> names(<span class="pl-smi">tr</span>) ]
+<span class="pl-smi">te</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">te</span>[<span class="pl-k">-</span><span class="pl-smi">inValidation</span>, names(<span class="pl-smi">te</span>) <span class="pl-k">%in%</span> names(<span class="pl-smi">tr</span>)]</pre></div>
+
+<p>These two partitions will help estimate the out-of-sample error of the model because they represent 40% of the data. They were not used during the model design and data cleaning steps, and they will help show how well the model could perform in the real world.</p>
+
+<h1>
+<a id="test-confusion-matrix" class="anchor" href="#test-confusion-matrix" aria-hidden="true"><span class="octicon octicon-link"></span></a>Test Confusion Matrix</h1>
+
+<pre lang="r,eval=FALSE"><code>pred &lt;- predict(modelFit, newdata = te)
+</code></pre>
+
+<pre lang="r,"><code># Predictions and confusion matrix for test sample #
+pred &lt;- predict(modelFit, newdata = te)
+confusionMatrix(te$classe, pred)[[2]]
+</code></pre>
+
+<p>The mean out-of-sample accuracy in the test sample is 0.9954 with a 95% confidence interval of 0.9928 to 0.9973.</p>
+
+<h1>
+<a id="validation-confusion-matrix" class="anchor" href="#validation-confusion-matrix" aria-hidden="true"><span class="octicon octicon-link"></span></a>Validation Confusion Matrix</h1>
+
+<pre lang="r,eval=FALSE"><code>pred2 &lt;- predict(modelFit, newdata = validation)
+</code></pre>
+
+<pre lang="r,"><code># Predictions and confusion matrix for validation #
+pred2 &lt;- predict(modelFit, newdata = validation)
+confusionMatrix(validation$classe, pred2)[[2]]
+</code></pre>
+
+<p>The mean out-of-sample accuracy for the validation sample is 0.9967 with a 95% confidence interval of 0.9943 to 0.9982.</p>
+
+<h1>
+<a id="final-predictions" class="anchor" href="#final-predictions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Final Predictions</h1>
+
+<p>Because these out-of-sample accuracy estimates are very good, the final test is to predict the class of 20 unclassified activities.</p>
+
+<pre lang="r,echo=FALSE"><code>finalPred &lt;- predict (modelFit, newdata = finaltesting)
+finalPred &lt;- as.character(finalPred)
+</code></pre>
+
+<p>The final predictions had the following classes: <code>r finalPred</code>. And these were 100% accurate.  </p>
+
+<p>However, taking the upper and lower estimates for the model's out-of-sample accuracy, its accuracy will probably fluxuate between 99.28% and 99.82% at a 95% confidence level.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/Dripdrop12">Dripdrop12</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
